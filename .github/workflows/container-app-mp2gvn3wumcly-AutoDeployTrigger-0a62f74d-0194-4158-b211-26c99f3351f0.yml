@@ -1,0 +1,47 @@
+name: Trigger auto deployment for container-app-mp2gvn3wumcly
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'result/**'
+    - '.github/workflows/container-app-mp2gvn3wumcly-AutoDeployTrigger-0a62f74d-0194-4158-b211-26c99f3351f0.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.CONTAINERAPPMP2GVN3WUMCLY_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.CONTAINERAPPMP2GVN3WUMCLY_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.CONTAINERAPPMP2GVN3WUMCLY_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/result 
+          registryUrl: containerregistrymp2gvn3wumcly.azurecr.io
+          registryUsername: ${{ secrets.CONTAINERAPPMP2GVN3WUMCLY_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CONTAINERAPPMP2GVN3WUMCLY_REGISTRY_PASSWORD }}
+          containerAppName: container-app-mp2gvn3wumcly
+          resourceGroup: examplevotingappac55
+          imageToBuild: containerregistrymp2gvn3wumcly.azurecr.io/container-app-mp2gvn3wumcly:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
